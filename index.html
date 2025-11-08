@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CADE-Q 2: Cardiac Knowledge Questionnaire | CardioSree</title>
+  <style>
+    :root {
+      --correct: #4CAF50;
+      --warning: #FF9800;
+      --error: #F44336;
+      --primary: #1976D2;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+      background: #f5f5f5;
+      color: #333;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    header h1 {
+      text-align: center;
+      color: var(--primary);
+      margin: 0;
+    }
+    .logo-fallback {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--primary);
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .instructions {
+      background: #f9f9ff;
+      padding: 15px;
+      border-left: 4px solid var(--primary);
+      margin: 20px 0;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    .form-group input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .form-group label.inline {
+      display: inline-block;
+      margin-right: 15px;
+    }
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 10px 5px;
+    }
+    .btn:hover {
+      background: #0D47A1;
+    }
+    .btn-print {
+      background: var(--correct);
+    }
+    .domain {
+      margin-bottom: 30px;
+    }
+    .domain h2 {
+      color: #0D47A1;
+      border-bottom: 2px solid #e0e0e0;
+      padding-bottom: 8px;
+    }
+    .question {
+      margin-bottom: 20px;
+      padding: 12px;
+      background: #fafafa;
+      border-radius: 6px;
+    }
+    .question h3 {
+      margin-top: 0;
+      font-size: 16px;
+    }
+    .options label {
+      display: flex;
+      align-items: flex-start;
+      margin: 8px 0;
+      padding: 10px;
+      cursor: pointer;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: #fff;
+    }
+    .options input[type="radio"] {
+      margin-right: 10px;
+      margin-top: 4px;
+    }
+    .result {
+      display: none;
+      margin-top: 30px;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+    .badge {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 15px 0;
+      padding: 12px;
+      border-radius: 8px;
+    }
+    .high { background-color: #E8F5E9; color: var(--correct); }
+    .moderate { background-color: #FFF8E1; color: var(--warning); }
+    .low { background-color: #FFEBEE; color: var(--error); }
+    .domain-score {
+      text-align: left;
+      margin: 10px 0;
+      padding: 10px;
+      background: #f0f7ff;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+    .qr-placeholder {
+      width: 180px;
+      height: 180px;
+      margin: 20px auto;
+      background: #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #666;
+      border: 1px dashed #999;
+    }
+    @media print {
+      .btn { display: none !important; }
+      body { background: white; padding: 0; }
+      .container { box-shadow: none; padding: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- STEP 1: PATIENT REGISTRATION -->
+    <div id="patient-info-section">
+      <div style="text-align:center; margin-bottom:15px;">
+  <img src="cardiosree.png" alt="CardioSree" 
+       style="height:50px; max-width:200px; object-fit:contain;"
+       onerror="this.style.display='none'; document.getElementById('logo-text').style.display='block';">
+  <div id="logo-text" style="display:none; font-size:24px; font-weight:bold; color:#1976D2; direction:ltr;">കാർഡിയോശ്രീ</div>
+</div>
+      <header><h1>CADE-Q 2 Questionnaire</h1></header>
+      <div class="instructions">
+        <p><strong>Please provide your details to begin the assessment:</strong></p>
+      </div>
+      <form id="patient-form">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" id="patient-name" required>
+        </div>
+        <div class="form-group">
+          <label>Age *</label>
+          <input type="number" id="patient-age" min="18" max="120" required>
+        </div>
+        <div class="form-group">
+          <label>Gender *</label><br>
+          <label class="inline"><input type="radio" name="gender" value="Male" required> Male</label>
+          <label class="inline"><input type="radio" name="gender" value="Female"> Female</label>
+          <label class="inline"><input type="radio" name="gender" value="Other"> Other</label>
+        </div>
+        <div class="form-group">
+          <label>Patient ID (optional)</label>
+          <input type="text" id="patient-id">
+        </div>
+        <div class="form-group">
+          <label>Mobile (optional)</label>
+          <input type="tel" id="patient-mobile">
+        </div>
+        <button type="button" class="btn" onclick="startQuestionnaire()">➡️ Start Questionnaire</button>
+      </form>
+    </div>
+
+    <!-- STEP 2: QR COVER (for printing) -->
+    <div id="qr-cover" style="display:none; text-align:center;">
+     <div style="text-align:center; margin-bottom:15px;">
+  <img src="cardiosree.png" alt="CardioSree" 
+       style="height:50px; max-width:200px; object-fit:contain;"
+       onerror="this.style.display='none'; document.getElementById('logo-text').style.display='block';">
+  <div id="logo-text" style="display:none; font-size:24px; font-weight:bold; color:#1976D2; direction:ltr;">കാർഡിയോശ്രീ</div>
+</div>
+      <h2>Scan to Take CADE-Q 2</h2>
+      <p>Cardiac Knowledge Assessment for Patients</p>
+      <div class="qr-placeholder">
+        QR: https://your-clinic.org/cadeq2.html
+      </div>
+      <p><em>Hosted by CardioSree • Kerala Cardiac Wellness</em></p>
+    </div>
+
+    <!-- STEP 3: QUESTIONNAIRE -->
+    <div id="questionnaire" style="display:none;">
+      <div style="text-align:center; margin-bottom:15px;">
+  <img src="cardiosree.png" alt="CardioSree" 
+       style="height:50px; max-width:200px; object-fit:contain;"
+       onerror="this.style.display='none'; document.getElementById('logo-text').style.display='block';">
+  <div id="logo-text" style="display:none; font-size:24px; font-weight:bold; color:#1976D2; direction:ltr;">കാർഡിയോശ്രീ</div>
+</div>
+      <header><h1>CADE-Q 2 Questionnaire</h1></header>
+      <div class="instructions">
+        <p><strong>About this questionnaire:</strong></p>
+        <ul>
+          <li>You are in a cardiac rehabilitation program.</li>
+          <li>This assesses your knowledge about heart disease and related factors.</li>
+          <li>5 domains: Medical Condition, Risk Factors, Exercise, Nutrition, Psychosocial Risk.</li>
+          <li>Each question has 4 options. Choose the <strong>most correct</strong> answer.</li>
+          <li>If unsure, select “I don’t know” — <strong>do not leave blank</strong>.</li>
+          <li>Takes ~20 minutes. Confidential and voluntary.</li>
+        </ul>
+      </div>
+
+      <!-- Medical Condition -->
+      <div class="domain" data-domain="Medical Condition">
+        <h2>Domain: Medical Condition</h2>
+        <!-- Q1 -->
+        <div class="question">
+          <h3>1. Coronary Artery Disease is:</h3>
+          <div class="options">
+            <label><input type="radio" name="q1" value="1"> a) A disease of the heart’s arteries that occurs only in older age and is mainly caused by deposits of calcium in the arteries.</label>
+            <label><input type="radio" name="q1" value="2"> b) A disease of the arteries of the heart which occurs in older age in people with high cholesterol or who smoke.</label>
+            <label><input type="radio" name="q1" value="3"> c) A disease of the arteries of the heart that starts silently at a young age. It is influenced by poor life style habits, genetics, and involves inflammation in the arteries.</label>
+            <label><input type="radio" name="q1" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+        <!-- Q2 -->
+        <div class="question">
+          <h3>2. Angina (chest pain or discomfort) occurs:</h3>
+          <div class="options">
+            <label><input type="radio" name="q2" value="2"> a) When the heart muscle is working too hard.</label>
+            <label><input type="radio" name="q2" value="3"> b) When the heart muscle is not getting enough blood and oxygen to work properly.</label>
+            <label><input type="radio" name="q2" value="1"> c) When the brain is not getting enough oxygen.</label>
+            <label><input type="radio" name="q2" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+        <!-- Q3 -->
+        <div class="question">
+          <h3>3. In a person with coronary artery disease, which of the following is a usual description of angina?</h3>
+          <div class="options">
+            <label><input type="radio" name="q3" value="1"> a) Headache after meals.</label>
+            <label><input type="radio" name="q3" value="3"> b) Chest pain or discomfort, at rest or during physical activity, which can also be felt in the arm and/or back and/or neck.</label>
+            <label><input type="radio" name="q3" value="2"> c) Chest pain or discomfort during physical activity.</label>
+            <label><input type="radio" name="q3" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+        <!-- Q4 -->
+        <div class="question">
+          <h3>4. A heart attack occurs:</h3>
+          <div class="options">
+            <label><input type="radio" name="q4" value="2"> a) If an artery in the heart becomes blocked.</label>
+            <label><input type="radio" name="q4" value="1"> b) If the heart suddenly races in response to stress.</label>
+            <label><input type="radio" name="q4" value="3"> c) If the flow of oxygen-rich blood to an area of heart muscle suddenly becomes blocked. If blood flow is not restored quickly, the area of heart muscle begins to die.</label>
+            <label><input type="radio" name="q4" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+        <!-- Q5 -->
+        <div class="question">
+          <h3>5. The best resources available to help someone understand his/her medications are:</h3>
+          <div class="options">
+            <label><input type="radio" name="q5" value="3"> a) The doctor, the cardiac rehab team, the pharmacist and recommended resources on the internet.</label>
+            <label><input type="radio" name="q5" value="1"> b) What someone reads on the internet.</label>
+            <label><input type="radio" name="q5" value="2"> c) The doctor and the cardiac rehab team.</label>
+            <label><input type="radio" name="q5" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+        <!-- Q6 -->
+        <div class="question">
+          <h3>6. Medications such as aspirin (ASA) and clopidogrel (Plavix™) are important because:</h3>
+          <div class="options">
+            <label><input type="radio" name="q6" value="2"> a) They lower blood pressure.</label>
+            <label><input type="radio" name="q6" value="2"> b) They “thin” the blood.</label>
+            <label><input type="radio" name="q6" value="3"> c) They reduce the “stickiness” of platelets in the blood so that blood flows more easily through coronary arteries and past coronary stents.</label>
+            <label><input type="radio" name="q6" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+        <!-- Q7 -->
+        <div class="question">
+          <h3>7. The “statin” medications… have a beneficial effect by:</h3>
+          <div class="options">
+            <label><input type="radio" name="q7" value="2"> a) Lowering LDL cholesterol in the blood stream.</label>
+            <label><input type="radio" name="q7" value="3"> b) Blocking the production of LDL cholesterol in the liver, lowering LDL cholesterol in the blood stream, and encouraging cholesterol to move out of plaques from the arteries.</label>
+            <label><input type="radio" name="q7" value="1"> c) Reducing the absorption of cholesterol from food.</label>
+            <label><input type="radio" name="q7" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Risk Factors -->
+      <div class="domain" data-domain="Risk Factors">
+        <h2>Domain: Risk Factors</h2>
+        <!-- Q8 -->
+        <div class="question">
+          <h3>8. The risk factors for heart disease that can be changed are:</h3>
+          <div class="options">
+            <label><input type="radio" name="q8" value="2"> a) Blood pressure, cholesterol, and smoking.</label>
+            <label><input type="radio" name="q8" value="1"> b) Age, family history of heart disease, ethnicity and sex.</label>
+            <label><input type="radio" name="q8" value="3"> c) Blood pressure (systolic and diastolic), LDL+ HDL cholesterol, smoking and second hand smoking, waist size, and reaction to stress.</label>
+            <label><input type="radio" name="q8" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+        <!-- Q9 -->
+        <div class="question">
+          <h3>9. The actions that can be taken to control cholesterol levels include:</h3>
+          <div class="options">
+            <label><input type="radio" name="q9" value="2"> a) Knowing the total cholesterol level, becoming a vegetarian and avoiding eggs.</label>
+            <label><input type="radio" name="q9" value="3"> b) Knowing the LDL and HDL levels, taking cholesterol medication as prescribed, increasing soluble fibre intake and reducing saturated fat in the diet, and participating in aerobic exercise 5 times per week.</label>
+            <label><input type="radio" name="q9" value="2"> c) Knowing the cholesterol levels and taking cholesterol medication as prescribed.</label>
+            <label><input type="radio" name="q9" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+        <!-- Q10 -->
+        <div class="question">
+          <h3>10. The actions that can be taken to control blood pressure include:</h3>
+          <div class="options">
+            <label><input type="radio" name="q10" value="2"> a) Increasing calcium in the diet.</label>
+            <label><input type="radio" name="q10" value="2"> b) Reducing the amount of salt in the diet, and taking blood pressure medication.</label>
+            <label><input type="radio" name="q10" value="3"> c) Reducing the amount of sodium in the diet to <2000 mg per day, exercising, taking blood pressure medication regularly and learning relaxation techniques.</label>
+            <label><input type="radio" name="q10" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+        <!-- Q11 -->
+        <div class="question">
+          <h3>11. The first step towards controlling a risk factor is:</h3>
+          <div class="options">
+            <label><input type="radio" name="q11" value="2"> a) Knowing if someone has the risk factor.</label>
+            <label><input type="radio" name="q11" value="3"> b) Knowing the level of the risk factor.</label>
+            <label><input type="radio" name="q11" value="2"> c) Setting a goal or action plan to control the risk factor.</label>
+            <label><input type="radio" name="q11" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+        <!-- Q12 -->
+        <div class="question">
+          <h3>12. The actions to prevent developing diabetes include:</h3>
+          <div class="options">
+            <label><input type="radio" name="q12" value="3"> a) Follow a heart healthy diet, do 150 minutes of aerobic exercise weekly and twice weekly resistance exercises with weights and therabands.</label>
+            <label><input type="radio" name="q12" value="2"> b) Reduce the amount of fats and carbs in the diet.</label>
+            <label><input type="radio" name="q12" value="1"> c) With a family history of diabetes, a person is bound to develop diabetes because diabetes is not a preventable disease.</label>
+            <label><input type="radio" name="q12" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exercise -->
+      <div class="domain" data-domain="Exercise">
+        <h2>Domain: Exercise</h2>
+        <!-- Q13 to Q19 -->
+        <div class="question">
+          <h3>13. What are the important parts of an exercise prescription?</h3>
+          <div class="options">
+            <label><input type="radio" name="q13" value="1"> a) Replacing calories and salt during a light workout.</label>
+            <label><input type="radio" name="q13" value="3"> b) How hard to exercise, how long to exercise, how often to exercise and what type of exercise to do.</label>
+            <label><input type="radio" name="q13" value="2"> c) How hard to exercise, and how long to exercise.</label>
+            <label><input type="radio" name="q13" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+        <div class="question">
+          <h3>14. For a person living with heart disease, it is important to do a cardiovascular warm-up before exercising because:</h3>
+          <div class="options">
+            <label><input type="radio" name="q14" value="3"> a) It gradually increases the heart rate, it may reduce muscle soreness and can reduce the risk of developing angina.</label>
+            <label><input type="radio" name="q14" value="1"> b) It adds more time to the total amount of minutes of exercise.</label>
+            <label><input type="radio" name="q14" value="2"> c) It prepares the body for exercise.</label>
+            <label><input type="radio" name="q14" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+        <div class="question">
+          <h3>15. The pulse can be found:</h3>
+          <div class="options">
+            <label><input type="radio" name="q15" value="2"> a) In the wrist below the base of the thumb.</label>
+            <label><input type="radio" name="q15" value="2"> b) In the wrist below the base of the pinky finger or on the neck on the Adam’s apple.</label>
+            <label><input type="radio" name="q15" value="3"> c) At the radial artery (wrist) or at the carotid artery (neck).</label>
+            <label><input type="radio" name="q15" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+        <div class="question">
+          <h3>16. Three things that one can do to exercise safely outdoors in the winter are:</h3>
+          <div class="options">
+            <label><input type="radio" name="q16" value="2"> a) Check the temperature and wind-chill, and wear layers of clothing.</label>
+            <label><input type="radio" name="q16" value="3"> b) Check the temperature and wind-chill and make sure it is not below -10 degrees C, wear 3-4 layers of clothing and adjust the pace of walking so that the level of exertion and heart rate are on target.</label>
+            <label><input type="radio" name="q16" value="1"> c) Check the temperature and wind-chill and make sure it is not below -15 degrees C, wear a winter coat and jog if one gets too cold.</label>
+            <label><input type="radio" name="q16" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+        <div class="question">
+          <h3>17. The benefits of doing resistance training (lift weights or elastic bands) include:</h3>
+          <div class="options">
+            <label><input type="radio" name="q17" value="2"> a) Builds up strength and muscles.</label>
+            <label><input type="radio" name="q17" value="2"> b) Lowers resting heart rate.</label>
+            <label><input type="radio" name="q17" value="3"> c) Increases strength, improves the ability to carry out day to day activities, improves blood sugar levels and increases muscle.</label>
+            <label><input type="radio" name="q17" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+        <div class="question">
+          <h3>18. If a person gets chest discomfort during a walking exercise session, he or she should:</h3>
+          <div class="options">
+            <label><input type="radio" name="q18" value="1"> a) Speed up to see if the discomfort goes away.</label>
+            <label><input type="radio" name="q18" value="2"> b) Slow down and stop exercising.</label>
+            <label><input type="radio" name="q18" value="3"> c) Slow the walk pace and if it does not go away within 1 minute, stop exercising. If it still does not go away within the next 1 minute, take nitro-glycerine as prescribed. If the pain continues, get help.</label>
+            <label><input type="radio" name="q18" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+        <div class="question">
+          <h3>19. How does a person know if he/she is exercising at the right level?</h3>
+          <div class="options">
+            <label><input type="radio" name="q19" value="3"> a) The heart rate is in the target zone, the exertion level is no higher than “somewhat hard”, and the person can exercise and talk.</label>
+            <label><input type="radio" name="q19" value="2"> b) The heart rate is in the target zone.</label>
+            <label><input type="radio" name="q19" value="1"> c) Working up a sweat, breathing heavy and the heart rate is going fast.</label>
+            <label><input type="radio" name="q19" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nutrition -->
+      <div class="domain" data-domain="Nutrition">
+        <h2>Domain: Nutrition</h2>
+        <!-- Q20 to Q26 -->
+        <div class="question">
+          <h3>20. What is the best source of omega 3 fats in food?</h3>
+          <div class="options">
+            <label><input type="radio" name="q20" value="2"> a) Ground flaxseed.</label>
+            <label><input type="radio" name="q20" value="1"> b) Pasta.</label>
+            <label><input type="radio" name="q20" value="3"> c) Fatty fish (e.g. trout, salmon).</label>
+            <label><input type="radio" name="q20" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+        <div class="question">
+          <h3>21. Trans fats are:</h3>
+          <div class="options">
+            <label><input type="radio" name="q21" value="1"> a) Found in nuts and seeds.</label>
+            <label><input type="radio" name="q21" value="3"> b) Partially hydrogenated vegetable oils (e.g. vegetable shortening).</label>
+            <label><input type="radio" name="q21" value="2"> c) Margarine.</label>
+            <label><input type="radio" name="q21" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+        <div class="question">
+          <h3>22. What is one good way to add more fibre to your diet:</h3>
+          <div class="options">
+            <label><input type="radio" name="q22" value="2"> a) Add nuts and seeds to a salad.</label>
+            <label><input type="radio" name="q22" value="1"> b) Drink juice.</label>
+            <label><input type="radio" name="q22" value="3"> c) Eat plant proteins (e.g. legumes/beans, lentils).</label>
+            <label><input type="radio" name="q22" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+        <div class="question">
+          <h3>23. Which of the following foods has the most salt:</h3>
+          <div class="options">
+            <label><input type="radio" name="q23" value="2"> a) Bread.</label>
+            <label><input type="radio" name="q23" value="3"> b) Frozen dinners.</label>
+            <label><input type="radio" name="q23" value="1"> c) Fruits and vegetables.</label>
+            <label><input type="radio" name="q23" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+        <div class="question">
+          <h3>24. What combination of foods can help lower blood pressure?</h3>
+          <div class="options">
+            <label><input type="radio" name="q24" value="2"> a) Red meat, poultry, fish.</label>
+            <label><input type="radio" name="q24" value="2"> b) Vegetables and fruits.</label>
+            <label><input type="radio" name="q24" value="3"> c) Vegetables and fruits, whole grains, low fat dairy, nuts and seeds.</label>
+            <label><input type="radio" name="q24" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+        <div class="question">
+          <h3>25. When reading food labels, what should one look at first?</h3>
+          <div class="options">
+            <label><input type="radio" name="q25" value="2"> a) Fat content.</label>
+            <label><input type="radio" name="q25" value="1"> b) Brand name.</label>
+            <label><input type="radio" name="q25" value="3"> c) Serving size.</label>
+            <label><input type="radio" name="q25" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+        <div class="question">
+          <h3>26. How many servings of fruits and vegetables should adults consume?</h3>
+          <div class="options">
+            <label><input type="radio" name="q26" value="3"> a) 7 to 10 servings a day.</label>
+            <label><input type="radio" name="q26" value="2"> b) 5 servings a day.</label>
+            <label><input type="radio" name="q26" value="2"> c) As many as possible.</label>
+            <label><input type="radio" name="q26" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Psychosocial Risk -->
+      <div class="domain" data-domain="Psychosocial Risk">
+        <h2>Domain: Psychosocial Risk</h2>
+        <!-- Q27 to Q31 -->
+        <div class="question">
+          <h3>27. Which of the below are effective stress management techniques?</h3>
+          <div class="options">
+            <label><input type="radio" name="q27" value="2"> a) Deep breathing.</label>
+            <label><input type="radio" name="q27" value="1"> b) Avoid communication.</label>
+            <label><input type="radio" name="q27" value="3"> c) Meditation, progressive muscle relaxation, making social connections, stretching/exercise, deep breathing.</label>
+            <label><input type="radio" name="q27" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+        <div class="question">
+          <h3>28. What stresses have been related to increased risk for heart attacks?</h3>
+          <div class="options">
+            <label><input type="radio" name="q28" value="3"> a) Chronic stresses, major life events, disrupted sleep, and feelings of distress.</label>
+            <label><input type="radio" name="q28" value="2"> b) Chronic stress at home or at work and feeling depressed.</label>
+            <label><input type="radio" name="q28" value="2"> c) Stresses that you do not feel in control of.</label>
+            <label><input type="radio" name="q28" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+        <div class="question">
+          <h3>29. Which of the following describes your best option for reducing your risk from depression:</h3>
+          <div class="options">
+            <label><input type="radio" name="q29" value="2"> a) Take an antidepressant, and do your exercise prescription.</label>
+            <label><input type="radio" name="q29" value="3"> b) Do your exercises, take better care of yourself, and if required take medications.</label>
+            <label><input type="radio" name="q29" value="1"> c) The risk of heart attack due to depression cannot be reduced.</label>
+            <label><input type="radio" name="q29" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+        <div class="question">
+          <h3>30. It is important to recognize “sleep apnea” because:</h3>
+          <div class="options">
+            <label><input type="radio" name="q30" value="1"> a) It leads to long term lung disease.</label>
+            <label><input type="radio" name="q30" value="3"> b) It is associated with high blood pressure, abnormal heart rhythms, and higher risk of future heart attack.</label>
+            <label><input type="radio" name="q30" value="2"> c) It leads to further heart problems.</label>
+            <label><input type="radio" name="q30" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+        <div class="question">
+          <h3>31. “Chronic stress” is defined as:</h3>
+          <div class="options">
+            <label><input type="radio" name="q31" value="3"> a) Ongoing persistent stressful events in one area of your life.</label>
+            <label><input type="radio" name="q31" value="2"> b) Events at work or at home that make you feel irritable, anxious, or sleepless.</label>
+            <label><input type="radio" name="q31" value="2"> c) The stresses that are out of a person’s control.</label>
+            <label><input type="radio" name="q31" value="0"> d) I don’t know.</label>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align:center; margin-top:30px;">
+        <button type="button" class="btn" onclick="calculateScore()">📊 Submit & View My Score</button>
+        <button class="btn btn-print" onclick="window.print()">🖨️ Print Results</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: RESULTS -->
+    <div id="result" class="result">
+      <div class="logo-fallback">CardioSree</div>
+      <h2>CADE-Q 2 Results</h2>
+      <div id="patient-summary" style="background:#f9f9ff; padding:12px; margin-bottom:20px; border-radius:6px; text-align:left;"></div>
+      <div id="score-badge" class="badge"></div>
+      <div id="score-details"></div>
+      <button class="btn btn-print" onclick="window.print()" style="margin-top:20px;">🖨️ Print Results</button>
+    </div>
+  </div>
+
+  <script>
+    function startQuestionnaire() {
+      const name = document.getElementById('patient-name').value;
+      if (!name) { alert("Please enter your name."); return; }
+      
+      const patientData = {
+        name: name,
+        age: document.getElementById('patient-age').value,
+        gender: document.querySelector('input[name="gender"]:checked')?.value,
+        id: document.getElementById('patient-id').value || '—',
+        mobile: document.getElementById('patient-mobile').value || '—'
+      };
+      localStorage.setItem('cadeq2_patient', JSON.stringify(patientData));
+      
+      document.getElementById('patient-info-section').style.display = 'none';
+      document.getElementById('questionnaire').style.display = 'block';
+    }
+
+    function calculateScore() {
+      const domains = {
+        "Medical Condition": ["q1","q2","q3","q4","q5","q6","q7"],
+        "Risk Factors": ["q8","q9","q10","q11","q12"],
+        "Exercise": ["q13","q14","q15","q16","q17","q18","q19"],
+        "Nutrition": ["q20","q21","q22","q23","q24","q25","q26"],
+        "Psychosocial Risk": ["q27","q28","q29","q30","q31"]
+      };
+
+      let totalScore = 0;
+      let domainScores = {};
+
+      for (const [domainName, questions] of Object.entries(domains)) {
+        let domainScore = 0;
+        for (const q of questions) {
+          const selected = document.querySelector(`input[name="${q}"]:checked`);
+          if (selected) {
+            domainScore += parseInt(selected.value);
+          }
+        }
+        domainScores[domainName] = domainScore;
+        totalScore += domainScore;
+      }
+
+      // Show patient info in results
+      const patient = JSON.parse(localStorage.getItem('cadeq2_patient'));
+      if (patient) {
+        let summary = `<strong>Patient:</strong> ${patient.name}`;
+        if (patient.age) summary += ` | Age: ${patient.age}`;
+        if (patient.gender) summary += ` | Gender: ${patient.gender}`;
+        if (patient.id !== '—') summary += ` | ID: ${patient.id}`;
+        document.getElementById('patient-summary').innerHTML = summary;
+      }
+
+      // Determine knowledge level
+      let level, badgeClass;
+      if (totalScore >= 61) {
+        level = "High Knowledge 🌟";
+        badgeClass = "high";
+      } else if (totalScore >= 46) {
+        level = "Moderate Knowledge 👍";
+        badgeClass = "moderate";
+      } else {
+        level = "Low Knowledge 📚 — Review with your cardiac rehab team";
+        badgeClass = "low";
+      }
+
+      // Build results
+      let details = `<p><strong>Total Score:</strong> ${totalScore} / 75</p>`;
+      details += `<p><strong>Knowledge Level:</strong> ${level}</p>`;
+      details += `<h3>Score by Domain:</h3>`;
+      for (const [name, score] of Object.entries(domainScores)) {
+        const max = domains[name].length * 3;
+        details += `<div class="domain-score">${name}: ${score} / ${max}</div>`;
+      }
+
+      document.getElementById('score-badge').textContent = level;
+      document.getElementById('score-badge').className = 'badge ' + badgeClass;
+      document.getElementById('score-details').innerHTML = details;
+      document.getElementById('result').style.display = 'block';
+      document.getElementById('questionnaire').style.display = 'none';
+    }
+  </script>
+</body>
+</htm
